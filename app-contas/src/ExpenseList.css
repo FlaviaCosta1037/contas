@@ -1,0 +1,53 @@
+.expense-list {
+    background: linear-gradient(to bottom, #e0f7fa, #ffffff);
+    padding: 20px;
+    border-radius: 10px;
+    font-family: 'Arial', sans-serif;
+    max-width: 600px;
+    margin: auto; 
+}
+
+.total-expenses {
+    background: #007bff;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.total-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.total-amount {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.expense-details {
+    font-size: 1rem;
+    color: #333;
+}
+
+.expense-description {
+    font-weight: bold;
+}
+
+.expense-amount {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.btn {
+    font-size: 0.9rem;
+}
+
+.form-control {
+    font-size: 1rem;
+}
+
+.list-group-item {
+    font-size: 1rem;
+}

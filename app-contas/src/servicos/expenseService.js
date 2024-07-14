@@ -15,27 +15,32 @@ export const getAllExpenses = async () => {
 // Função para adicionar uma nova despesa
 export const addExpense = async (description, amount) => {
   try {
-    const newExpenseRef = await addDoc(collection(firestore, 'expenses'), {
-      description,
-      amount: parseFloat(amount),
-    });
-    const newExpenseSnapshot = await getDoc(newExpenseRef);
-    return { id: newExpenseSnapshot.id, ...newExpenseSnapshot.data() };
+      const newExpenseRef = await addDoc(collection(firestore, 'expenses'), {
+          description,
+          amount: parseFloat(amount),
+          createdAt: new Date() // Adiciona a data atual como timestamp de criação
+      });
+      const newExpenseSnapshot = await getDoc(newExpenseRef);
+      return { id: newExpenseSnapshot.id, ...newExpenseSnapshot.data() };
   } catch (error) {
-    console.error('Erro ao adicionar despesa:', error);
-    throw error;
+      console.error('Erro ao adicionar despesa:', error);
+      throw error;
   }
 };
 
 // Função para editar uma despesa existente
 export const editExpense = async (id, description, amount) => {
+  console.log('Editando despesa com ID:', id);
+  console.log('Nova descrição:', description);
+  console.log('Novo valor:', amount);
+
   try {
     const expenseRef = doc(firestore, 'expenses', id);
     await updateDoc(expenseRef, {
       description,
       amount: parseFloat(amount),
     });
-    const updatedExpenseSnapshot = await getDoc(expenseRef);
+    const updatedExpenseSnapshot = await getDoc(expenseRef, { cache: 'reload' });
     return { id: updatedExpenseSnapshot.id, ...updatedExpenseSnapshot.data() };
   } catch (error) {
     console.error('Erro ao editar despesa:', error);

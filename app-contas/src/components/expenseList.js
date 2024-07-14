@@ -1,83 +1,176 @@
 import React, { useEffect, useState } from 'react';
-import EditExpense from './editExpense';
-import DeleteExpense from './deleteExpense';
-import { getAllExpenses, getTotalExpenses, editExpense, deleteExpense } from '../servicos/expenseService';
+import { getAllExpenses, getTotalExpenses, deleteExpense, addExpense, editExpense } from '../servicos/expenseService';
+import Footer from './Footer';
+import NavBar from './NavBar';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '../ExpenseList.css';
 
 const ExpenseList = ({ updateFlag }) => {
     const [expenses, setExpenses] = useState([]);
     const [editingExpense, setEditingExpense] = useState(null);
     const [totalExpenses, setTotalExpenses] = useState(0);
+    const [newDescription, setNewDescription] = useState('');
+    const [newAmount, setNewAmount] = useState('');
 
     useEffect(() => {
         const fetchExpenses = async () => {
-            const fetchedExpenses = await getAllExpenses();
-            setExpenses(fetchedExpenses);
-            updateTotalExpenses();
+            try {
+                const fetchedExpenses = await getAllExpenses();
+                setExpenses(fetchedExpenses);
+                updateTotalExpenses();
+            } catch (error) {
+                console.error('Erro ao buscar despesas:', error);
+            }
         };
 
         fetchExpenses();
     }, [updateFlag]);
 
     const updateTotalExpenses = async () => {
-        const total = await getTotalExpenses();
-        setTotalExpenses(total);
-    };
-
-    const handleSaveEdit = async () => {
-        await editExpense(editingExpense.id, editingExpense.description, editingExpense.amount);
-        setEditingExpense(null);
-        updateExpenses();
-    };
-
-    const handleCancelEdit = () => {
-        setEditingExpense(null);
+        try {
+            const total = await getTotalExpenses();
+            setTotalExpenses(total);
+        } catch (error) {
+            console.error('Erro ao calcular total de despesas:', error);
+        }
     };
 
     const handleEdit = (id) => {
         const expenseToEdit = expenses.find((expense) => expense.id === id);
         setEditingExpense(expenseToEdit);
+        setNewDescription(expenseToEdit.description);
+        setNewAmount(expenseToEdit.amount.toString());
     };
 
     const handleDelete = async (id) => {
-        await deleteExpense(id);
-        updateExpenses();
+        try {
+            await deleteExpense(id);
+            updateExpenses();
+        } catch (error) {
+            console.error('Erro ao deletar despesa:', error);
+        }
     };
 
     const updateExpenses = async () => {
-        const updatedExpenses = await getAllExpenses();
-        setExpenses(updatedExpenses);
-        updateTotalExpenses();
+        try {
+            const updatedExpenses = await getAllExpenses();
+            setExpenses(updatedExpenses);
+            updateTotalExpenses();
+        } catch (error) {
+            console.error('Erro ao atualizar despesas:', error);
+        }
+    };
+
+    const handleSubmitNewExpense = async (e) => {
+        e.preventDefault();
+
+        try {
+            await addExpense(newDescription, newAmount);
+            setNewDescription('');
+            setNewAmount('');
+            updateExpenses();
+        } catch (error) {
+            console.error('Erro ao adicionar despesa:', error);
+        }
+    };
+
+    const handleNewDescriptionChange = (e) => {
+        setNewDescription(e.target.value);
+    };
+
+    const handleNewAmountChange = (e) => {
+        setNewAmount(e.target.value);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingExpense) return;
+
+        try {
+            await editExpense(editingExpense.id, newDescription, newAmount);
+            updateExpenses();
+            setEditingExpense(null);
+            setNewDescription('');
+            setNewAmount('');
+        } catch (error) {
+            console.error('Erro ao editar despesa:', error);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingExpense(null);
+        setNewDescription('');
+        setNewAmount('');
     };
 
     return (
-        <div className="container mt-4">
-            <h2>Lista de Despesas</h2>
-            <p>Total: R$ {totalExpenses}</p>
-            <ul className="list-group">
-                {expenses.map((expense) => (
-                    <li key={expense.id} className="list-group-item d-flex justify-content-between align-items-center">
-                        {editingExpense && editingExpense.id === expense.id ? (
-                            <EditExpense
-                                id={expense.id}
-                                currentDescription={expense.description}
-                                currentAmount={expense.amount}
-                                onSave={handleSaveEdit}
-                                onCancel={handleCancelEdit}
-                            />
-                        ) : (
-                            <>
-                                <div>
-                                    <strong>{expense.description}</strong> - R$ {expense.amount}
+        <div className="d-flex flex-column min-vh-100">
+
+            <div className="container mt-4 expense-list flex-grow-1">
+                <div className="total-expenses bg-primary text-white p-3 rounded mb-4">
+                    <h2 className="total-title">Total de Despesas</h2>
+                    <p className="total-amount">R$ {totalExpenses}</p>
+                </div>
+                <form onSubmit={handleSubmitNewExpense} className="mb-4">
+                    <div className="mb-3">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Descrição"
+                            value={newDescription}
+                            onChange={handleNewDescriptionChange}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <input
+                            type="number"
+                            className="form-control"
+                            placeholder="Valor"
+                            value={newAmount}
+                            onChange={handleNewAmountChange}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary w-100">Adicionar Despesa</button>
+                </form>
+                <ul className="list-group">
+                    {expenses.map((expense) => (
+                        <li key={expense.id} className="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                            {editingExpense && editingExpense.id === expense.id ? (
+                                <div className="w-100 d-flex flex-wrap align-items-center">
+                                    <input
+                                        type="text"
+                                        className="form-control mb-2 me-2 flex-grow-1"
+                                        placeholder="Descrição"
+                                        value={newDescription}
+                                        onChange={handleNewDescriptionChange}
+                                    />
+                                    <input
+                                        type="number"
+                                        className="form-control mb-2 me-2 flex-grow-1"
+                                        placeholder="Valor"
+                                        value={newAmount}
+                                        onChange={handleNewAmountChange}
+                                    />
+                                    <button className="btn btn-success mb-2 me-2" onClick={handleSaveEdit}>Salvar</button>
+                                    <button className="btn btn-danger mb-2" onClick={handleCancelEdit}>Cancelar</button>
                                 </div>
-                                <div>
-                                    <button className="btn btn-warning me-2" onClick={() => handleEdit(expense.id)}>Editar</button>
-                                    <DeleteExpense id={expense.id} onDelete={() => handleDelete(expense.id)} />
-                                </div>
-                            </>
-                        )}
-                    </li>
-                ))}
-            </ul>
+                            ) : (
+                                <>
+                                    <div className="flex-grow-1 expense-details">
+                                        <strong className="expense-description">{expense.description}</strong> - <span className="expense-amount">R$ {expense.amount}</span>
+                                    </div>
+                                    <div className="d-flex">
+                                        <button className="btn btn-warning me-2" onClick={() => handleEdit(expense.id)}>Editar</button>
+                                        <button className="btn btn-danger" onClick={() => handleDelete(expense.id)}>Excluir</button>
+                                    </div>
+                                </>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <Footer /> {/* Inclui o componente Footer ao final da lista de despesas */}
         </div>
     );
 };
